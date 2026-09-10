@@ -1,0 +1,41 @@
+services:
+  api:
+    build:
+      context: ./apps/backend/api
+      dockerfile: Dockerfile
+    container_name: url-api
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+    ports:
+      - "8080:8080"
+    networks:
+      - internal
+      - external
+
+  postgres:
+    image: postgres:latest
+    container_name: url-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks:
+      - internal
+
+networks:
+  external:
+  internal:
+    internal: true
+
+volumes:
+  postgres_data:
