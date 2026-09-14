@@ -1,35 +1,34 @@
 services:
-  api:
-    build:
-      context: ./apps/backend/api
-      dockerfile: Dockerfile
-    container_name: url-api
-    restart: unless-stopped
-    depends_on:
-      - postgres
-    environment:
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - POSTGRES_DB
-      - POSTGRES_HOST=postgres
-      - POSTGRES_PORT=5432
-    ports:
-      - "8080:8080"
-    networks:
-      - internal
-      - external
+  # api:
+  #   build:
+  #     context: ./apps/backend/url-shortener-api
+  #     dockerfile: Dockerfile
+  #   container_name: url-api
+  #   restart: unless-stopped
+  #   environment:
+  #     - DATABASE_URL
+  #   ports:
+  #     - "8080:8080"
+  #   networks:
+  #     - internal
+  #     - external
+  #   depends_on:
+  #     - postgres
 
   postgres:
-    image: postgres:latest
+    image: postgres:16-alpine
     container_name: url-postgres
     restart: unless-stopped
     environment:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
       - POSTGRES_DB
+    ports:
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
     networks:
+      - external
       - internal
 
 networks:
