@@ -16,8 +16,8 @@ RETURNING id, url, code, created_at
 `
 
 type CreateUrlParams struct {
-	Url  string `json:"url"`
-	Code string `json:"code"`
+	Url  string
+	Code string
 }
 
 func (q *Queries) CreateUrl(ctx context.Context, arg CreateUrlParams) (Url, error) {
@@ -48,4 +48,59 @@ func (q *Queries) FindUrlByCode(ctx context.Context, code string) (Url, error) {
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const findUrlByID = `-- name: FindUrlByID :one
+SELECT id, url, code, created_at 
+FROM urls 
+WHERE id = $1
+`
+
+func (q *Queries) FindUrlByID(ctx context.Context, id int32) (Url, error) {
+	row := q.db.QueryRow(ctx, findUrlByID, id)
+	var i Url
+	err := row.Scan(
+		&i.ID,
+		&i.Url,
+		&i.Code,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const listUrls = `-- name: ListUrls :many
+SELECT id, url, code, created_at
+FROM urls
+ORDER BY created_at DESC
+LIMIT $1 OFFSET $2
+`
+
+type ListUrlsParams struct {
+	Limit  int32
+	Offset int32
+}
+
+func (q *Queries) ListUrls(ctx context.Context, arg ListUrlsParams) ([]Url, error) {
+	rows, err := q.db.Query(ctx, listUrls, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Url
+	for rows.Next() {
+		var i Url
+		if err := rows.Scan(
+			&i.ID,
+			&i.Url,
+			&i.Code,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

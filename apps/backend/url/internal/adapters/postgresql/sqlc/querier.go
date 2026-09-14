@@ -11,6 +11,8 @@ import (
 type Querier interface {
 	CreateUrl(ctx context.Context, arg CreateUrlParams) (Url, error)
 	FindUrlByCode(ctx context.Context, code string) (Url, error)
+	FindUrlByID(ctx context.Context, id int32) (Url, error)
+	ListUrls(ctx context.Context, arg ListUrlsParams) ([]Url, error)
 }
 
 var _ Querier = (*Queries)(nil)

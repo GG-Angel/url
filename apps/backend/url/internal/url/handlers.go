@@ -29,11 +29,7 @@ func (h *handler) GetUrlByCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	io.Write(w, http.StatusOK, GetUrlResponse{
-		Url:       url.Url,
-		Code:      url.Code,
-		CreatedAt: url.CreatedAt,
-	})
+	io.Write(w, http.StatusOK, UrlFromRepo(url))
 }
 
 func (h *handler) CreateUrl(w http.ResponseWriter, r *http.Request) {
@@ -49,10 +45,28 @@ func (h *handler) CreateUrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	io.Write(w, http.StatusCreated, CreateUrlResponse{
-		Url:  url.Url,
-		Code: url.Code,
-	})
+	io.Write(w, http.StatusCreated, UrlFromRepo(url))
+}
+
+func (h *handler) ListUrls(w http.ResponseWriter, r *http.Request) {
+	limit := io.QueryParamInt(r, "limit", 10)
+	offset := io.QueryParamInt(r, "offset", 0)
+	if offset < 0 || limit <= 0 || limit > 100 {
+		http.Error(w, "Invalid pagination parameters", http.StatusBadRequest)
+		return
+	}
+
+	urls, err := h.service.ListUrls(r.Context(), limit, offset)
+	if err != nil {
+		http.Error(w, "Failed to list URLs", http.StatusInternalServerError)
+		return
+	}
+
+	response := make([]UrlResponse, len(urls))
+	for i, u := range urls {
+		response[i] = UrlFromRepo(u)
+	}
+	io.Write(w, http.StatusOK, response)
 }
 
 func NewHandler(s service) *handler {

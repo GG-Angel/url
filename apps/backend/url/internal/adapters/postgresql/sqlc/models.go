@@ -9,8 +9,8 @@ import (
 )
 
 type Url struct {
-	ID        int32     `json:"id"`
-	Url       string    `json:"url"`
-	Code      string    `json:"code"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        int32
+	Url       string
+	Code      string
+	CreatedAt time.Time
 }

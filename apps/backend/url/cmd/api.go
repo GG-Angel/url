@@ -35,8 +35,9 @@ func (a *application) mount() http.Handler {
 	urlService := url.NewService(repo.New(a.db))
 	urlHandler := url.NewHandler(urlService)
 	r.Get("/{code}", urlHandler.RedirectFromCode)
-	r.Get("/urls/{code}", urlHandler.GetUrlByCode)
+	r.Get("/urls", urlHandler.ListUrls)
 	r.Post("/urls", urlHandler.CreateUrl)
+	r.Get("/urls/{code}", urlHandler.GetUrlByCode)
 
 	return r
 }

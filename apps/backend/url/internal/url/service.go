@@ -14,11 +14,21 @@ import (
 
 type service interface {
 	GetUrlByCode(ctx context.Context, code string) (repo.Url, error)
+	ListUrls(ctx context.Context, limit, offset int) ([]repo.Url, error)
 	ShortenUrl(ctx context.Context, url string) (repo.Url, error)
 }
 
 type svc struct {
 	repo repo.Querier
+}
+
+// ListUrls implements [service].
+func (s *svc) ListUrls(ctx context.Context, limit int, offset int) ([]repo.Url, error) {
+	if offset < 0 || limit <= 0 || limit > 100 {
+		return nil, fmt.Errorf("invalid limit or offset")
+	}
+
+	return s.repo.ListUrls(ctx, repo.ListUrlsParams{Limit: int32(limit), Offset: int32(offset)})
 }
 
 // GetUrlByCode implements [service].
