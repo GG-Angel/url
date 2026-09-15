@@ -1,0 +1,11 @@
+services:
+  url:
+    build:
+      context: ./apps/backend/url
+      dockerfile: Dockerfile
+
+  postgres:
+    ports:
+      - "127.0.0.1:5432:5432"
+    networks:
+      - external

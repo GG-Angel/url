@@ -1,0 +1,17 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Go Build Artifacts and Cache
+*.test
+*.out
+bin/
+obj/
+
+# Local Environment & Secrets
+.env
+*.local

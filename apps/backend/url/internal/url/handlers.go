@@ -2,6 +2,7 @@ package url
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"github.com/GG-Angel/url/internal/io"
@@ -12,10 +13,16 @@ type handler struct {
 	service service
 }
 
+func (h *handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(":3"))
+}
+
 func (h *handler) RedirectFromCode(w http.ResponseWriter, r *http.Request) {
 	url, err := h.service.GetUrlByCode(r.Context(), chi.URLParam(r, "code"))
 	if err != nil {
-		http.Error(w, "URL not found", http.StatusNotFound)
+		message := "URL not found"
+		slog.Error(message, "error", err)
+		http.Error(w, message, http.StatusNotFound)
 		return
 	}
 
@@ -25,7 +32,9 @@ func (h *handler) RedirectFromCode(w http.ResponseWriter, r *http.Request) {
 func (h *handler) GetUrlByCode(w http.ResponseWriter, r *http.Request) {
 	url, err := h.service.GetUrlByCode(r.Context(), chi.URLParam(r, "code"))
 	if err != nil {
-		http.Error(w, "URL not found", http.StatusNotFound)
+		message := "URL not found"
+		slog.Error(message, "error", err)
+		http.Error(w, message, http.StatusNotFound)
 		return
 	}
 
@@ -41,7 +50,9 @@ func (h *handler) CreateUrl(w http.ResponseWriter, r *http.Request) {
 
 	url, err := h.service.ShortenUrl(r.Context(), req.Url)
 	if err != nil {
-		http.Error(w, "Failed to create URL", http.StatusInternalServerError)
+		message := "Failed to create URL"
+		slog.Error(message, "error", err)
+		http.Error(w, message, http.StatusInternalServerError)
 		return
 	}
 
@@ -58,7 +69,9 @@ func (h *handler) ListUrls(w http.ResponseWriter, r *http.Request) {
 
 	urls, err := h.service.ListUrls(r.Context(), limit, offset)
 	if err != nil {
-		http.Error(w, "Failed to list URLs", http.StatusInternalServerError)
+		message := "Failed to list URLs"
+		slog.Error(message, "error", err)
+		http.Error(w, message, http.StatusInternalServerError)
 		return
 	}
 
