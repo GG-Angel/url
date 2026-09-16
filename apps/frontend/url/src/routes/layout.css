@@ -1,2 +1,57 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
+
+@theme {
+	--color-background: #000;
+	--color-surface: #09090b;
+	--color-foreground: #fafafa;
+	--color-muted-foreground: #a1a1aa;
+	--color-subtle-foreground: #71717a;
+	--color-placeholder: #52525b;
+	--color-border: #27272a;
+	--color-ring: #71717a;
+	--color-primary: #fafafa;
+	--color-primary-foreground: #18181b;
+	--color-primary-hover: #d4d4d8;
+}
+
+@layer base {
+	* {
+		@apply border-border;
+	}
+
+	body {
+		@apply bg-background text-foreground;
+	}
+
+	a {
+		@apply cursor-pointer transition-colors hover:text-muted-foreground;
+	}
+
+	nav a,
+	section header a {
+		@apply text-sm text-muted-foreground hover:text-foreground;
+	}
+
+	section {
+		@apply overflow-hidden rounded border bg-surface;
+	}
+
+	section > header {
+		@apply border-b px-4 py-3 sm:px-5;
+	}
+
+	h1,
+	h2 {
+		@apply font-mono text-sm font-semibold text-foreground;
+	}
+
+	input[type='text'],
+	input[type='url'] {
+		@apply w-full rounded border-border bg-background text-foreground placeholder:text-placeholder focus:border-ring focus:ring-ring;
+	}
+
+	button {
+		@apply cursor-pointer bg-primary px-4 py-2 text-primary-foreground transition-colors hover:bg-primary-hover focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background focus:outline-none;
+	}
+}
