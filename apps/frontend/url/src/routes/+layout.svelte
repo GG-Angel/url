@@ -1,4 +1,6 @@
 <script lang="ts">
+	import {  House, Link, List, Tag } from '@lucide/svelte';
+	import { resolve } from '$app/paths';
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
 
@@ -7,12 +9,24 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
-<header class="bg-background border-b">
-	<div class="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
-		<a class="text-foreground font-mono text-sm font-semibold" href="/">shrt</a>
-	</div>
-</header>
-<main class="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 py-8 sm:px-6 sm:py-12">
-	{@render children()}
-</main>
+<div class="flex h-svh flex-col">
+	<header class="border-b bg-background">
+		<div class="flex items-center justify-between p-4 sm:px-6">
+			<a class="font-mono text-sm font-semibold text-foreground" href={resolve('/')}>shrt</a>
+		</div>
+	</header>
 
+	<div class="flex flex-1 min-h-0">
+		<nav class="sidebar-nav w-54 flex shrink-0 flex-col border-r pt-4" aria-label="Sidebar">
+			<a href={resolve('/')}><House /> Overview</a>
+			<a href={resolve('/')}><List /> List short URLs</a>
+			<a href={resolve('/')}><Link /> Create short URL</a>
+			<a href={resolve('/')}><Tag /> Manage tags</a>
+		</nav>
+		<main
+			class="flex flex-1 flex-col gap-8 overflow-y-auto p-4 sm:p-6"
+		>
+			{@render children()}
+		</main>
+	</div>
+</div>

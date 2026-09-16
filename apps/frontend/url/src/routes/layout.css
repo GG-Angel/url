@@ -13,6 +13,7 @@
 	--color-primary: #fafafa;
 	--color-primary-foreground: #18181b;
 	--color-primary-hover: #d4d4d8;
+	--color-secondary-hover: #18181b;
 }
 
 @layer base {
@@ -31,6 +32,14 @@
 	nav a,
 	section header a {
 		@apply text-sm text-muted-foreground hover:text-foreground;
+	}
+
+	.sidebar-nav a {
+		@apply flex items-center gap-2.5 bg-background px-4 py-2 text-foreground hover:bg-secondary-hover hover:text-foreground;
+	}
+
+	.sidebar-nav svg {
+		@apply size-4 shrink-0;
 	}
 
 	section {
