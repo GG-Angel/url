@@ -38,6 +38,10 @@
 		@apply flex items-center gap-2.5 bg-background px-4 py-2 text-foreground hover:bg-secondary-hover hover:text-foreground;
 	}
 
+	.sidebar-nav a.active {
+		@apply bg-primary text-primary-foreground;
+	}
+
 	.sidebar-nav svg {
 		@apply size-4 shrink-0;
 	}
