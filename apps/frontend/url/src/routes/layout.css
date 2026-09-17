@@ -4,16 +4,22 @@
 @theme {
 	--color-background: #000;
 	--color-surface: #09090b;
+
 	--color-foreground: #fafafa;
 	--color-muted-foreground: #a1a1aa;
 	--color-subtle-foreground: #71717a;
+
 	--color-placeholder: #52525b;
 	--color-border: #27272a;
 	--color-ring: #71717a;
+
 	--color-primary: #fafafa;
 	--color-primary-foreground: #18181b;
 	--color-primary-hover: #d4d4d8;
-	--color-secondary-hover: #18181b;
+
+	--color-secondary: #18181b;
+	--color-secondary-foreground: #fafafa;
+	--color-secondary-hover: #1f1f22;
 }
 
 @layer base {
@@ -65,6 +71,18 @@
 	}
 
 	button {
-		@apply cursor-pointer bg-primary px-4 py-2 text-primary-foreground transition-colors hover:bg-primary-hover focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background focus:outline-none;
+		@apply flex cursor-pointer items-center gap-2 rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground transition-colors hover:bg-primary-hover;
+	}
+
+	button.secondary {
+		@apply bg-secondary text-secondary-foreground hover:bg-secondary-hover;
+	}
+
+	svg {
+		@apply size-4.5 shrink-0;
+	}
+
+	svg.small {
+		@apply size-4;
 	}
 }

@@ -27,7 +27,7 @@
                 type="text"
             />
         </div>
-        <button class="self-start rounded font-medium" type="submit">Save</button>
+        <button class="self-start" type="submit">Save</button>
     </form>
 </section>
 

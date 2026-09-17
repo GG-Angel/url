@@ -1,38 +1,10 @@
 <script lang="ts">
-	import { House, Link, List, Tag } from '@lucide/svelte';
 	import { resolve } from '$app/paths';
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.svg';
-	import { page } from '$app/state';
+	import Nav from '$lib/components/Nav.svelte';
 
 	let { children } = $props();
-
-	const navs = [
-		{
-			path: '/',
-			label: 'Overview',
-			Icon: House,
-			isActive: (path: string) => path === '/'
-		},
-		{
-			path: '/urls',
-			label: 'List short URLs',
-			Icon: List,
-			isActive: (path: string) => path.startsWith('/urls')
-		},
-		{
-			path: '/create',
-			label: 'Create short URL',
-			Icon: Link,
-			isActive: (path: string) => path.startsWith('/create')
-		},
-		{
-			path: '/tags',
-			label: 'Manage tags',
-			Icon: Tag,
-			isActive: (path: string) => path.startsWith('/tags')
-		}
-	] as const;
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
@@ -47,21 +19,10 @@
 		</div>
 	</header>
 
-	<div class="flex min-h-0 flex-1">
-		<nav
-			class="sidebar-nav flex w-54 shrink-0 flex-col border-r pt-4"
-			aria-label="Sidebar"
-		>
-			{#each navs as { path, label, Icon, isActive } (path)}
-				<a
-					href={resolve(path)}
-					class={isActive(page.url.pathname) ? 'active' : ''}
-				>
-					<Icon />
-					{label}
-				</a>
-			{/each}
-		</nav>
+	<div class="flex flex-col-reverse min-h-0 flex-1 sm:flex-row">
+		<div class="flex flex-col justify-between w-auto border-t sm:border-t-0 sm:border-r py-4 sm:w-56">
+			<Nav />
+		</div>
 		<main class="flex flex-1 flex-col gap-8 overflow-y-auto p-4 sm:p-6">
 			{@render children()}
 		</main>
