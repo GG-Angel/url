@@ -9,10 +9,16 @@ import (
 )
 
 type Querier interface {
+	AddTagToUrl(ctx context.Context, arg AddTagToUrlParams) error
+	CreateTag(ctx context.Context, name string) (Tag, error)
 	CreateUrl(ctx context.Context, arg CreateUrlParams) (Url, error)
-	FindUrlByCode(ctx context.Context, code string) (Url, error)
-	FindUrlByID(ctx context.Context, id int32) (Url, error)
+	DeleteTag(ctx context.Context, id int32) error
+	DeleteUrl(ctx context.Context, id int32) error
+	GetUrlByCode(ctx context.Context, code string) (Url, error)
+	GetUrlByID(ctx context.Context, id int32) (Url, error)
+	ListTagsForUrl(ctx context.Context, urlID int32) ([]Tag, error)
 	ListUrls(ctx context.Context, arg ListUrlsParams) ([]Url, error)
+	RemoveTagFromUrl(ctx context.Context, arg RemoveTagFromUrlParams) error
 }
 
 var _ Querier = (*Queries)(nil)

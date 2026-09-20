@@ -8,9 +8,22 @@ import (
 	"time"
 )
 
+type Tag struct {
+	ID        int32
+	Name      string
+	CreatedAt time.Time
+}
+
 type Url struct {
 	ID        int32
 	Url       string
 	Code      string
+	CreatedAt time.Time
+}
+
+type UrlTag struct {
+	ID        int32
+	UrlID     int32
+	TagID     int32
 	CreatedAt time.Time
 }

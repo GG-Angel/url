@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/GG-Angel/url/internal/io"
+	"github.com/GG-Angel/url/internal/middleware"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -29,8 +30,10 @@ func (h *handler) RedirectFromCode(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, url.Url, http.StatusPermanentRedirect)
 }
 
-func (h *handler) GetUrlByCode(w http.ResponseWriter, r *http.Request) {
-	url, err := h.service.GetUrlByCode(r.Context(), chi.URLParam(r, "code"))
+func (h *handler) GetUrl(w http.ResponseWriter, r *http.Request) {
+	id := middleware.GetID(r.Context())
+
+	url, err := h.service.GetUrlByID(r.Context(), id)
 	if err != nil {
 		message := "URL not found"
 		slog.Error(message, "error", err)
@@ -48,7 +51,7 @@ func (h *handler) CreateUrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url, err := h.service.ShortenUrl(r.Context(), req.Url)
+	url, err := h.service.ShortenUrl(r.Context(), req.Url, req.Tags)
 	if err != nil {
 		message := "Failed to create URL"
 		slog.Error(message, "error", err)
@@ -80,6 +83,32 @@ func (h *handler) ListUrls(w http.ResponseWriter, r *http.Request) {
 		response[i] = UrlFromRepo(u)
 	}
 	io.Write(w, http.StatusOK, response)
+}
+
+func (h *handler) DeleteUrl(w http.ResponseWriter, r *http.Request) {
+	id := middleware.GetID(r.Context())
+
+	if err := h.service.DeleteUrl(r.Context(), id); err != nil {
+		message := "Failed to delete URL"
+		slog.Error(message, "error", err)
+		http.Error(w, message, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *handler) DeleteTag(w http.ResponseWriter, r *http.Request) {
+	id := middleware.GetID(r.Context())
+
+	if err := h.service.DeleteTag(r.Context(), id); err != nil {
+		message := "Failed to delete Tag"
+		slog.Error(message, "error", err)
+		http.Error(w, message, http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func NewHandler(s service) *handler {

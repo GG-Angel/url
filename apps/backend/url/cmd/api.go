@@ -6,9 +6,10 @@ import (
 	"time"
 
 	repo "github.com/GG-Angel/url/internal/adapters/postgresql/sqlc"
+	appMiddleware "github.com/GG-Angel/url/internal/middleware"
 	"github.com/GG-Angel/url/internal/url"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	chiMiddleware "github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -28,17 +29,30 @@ type dbConfig struct {
 
 func (a *application) mount() http.Handler {
 	r := chi.NewRouter()
-	r.Use(middleware.RequestID)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
+	r.Use(chiMiddleware.RequestID)
+	r.Use(chiMiddleware.Logger)
+	r.Use(chiMiddleware.Recoverer)
 
-	urlService := url.NewService(repo.New(a.db))
+	urlService := url.NewService(repo.New(a.db), a.db)
 	urlHandler := url.NewHandler(urlService)
+
 	r.Get("/", urlHandler.HealthCheck)
 	r.Get("/{code}", urlHandler.RedirectFromCode)
 	r.Get("/urls", urlHandler.ListUrls)
 	r.Post("/urls", urlHandler.CreateUrl)
-	r.Get("/urls/{code}", urlHandler.GetUrlByCode)
+
+	r.Route("/urls/{id}", func(r chi.Router) {
+		r.Use(appMiddleware.ParseID)
+
+		r.Get("/", urlHandler.GetUrl)
+		r.Delete("/", urlHandler.DeleteUrl)
+	})
+
+	r.Route("/tags/{id}", func(r chi.Router) {
+		r.Use(appMiddleware.ParseID)
+
+		r.Delete("/", urlHandler.DeleteTag)
+	})
 
 	return r
 }

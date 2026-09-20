@@ -6,8 +6,8 @@ CREATE TABLE IF NOT EXISTS urls (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS code_idx 
+CREATE UNIQUE INDEX IF NOT EXISTS ix_urls_code 
 ON urls (code);
 
 -- +goose Down
-DROP TABlE IF EXISTS urls;
+DROP TABLE IF EXISTS urls;

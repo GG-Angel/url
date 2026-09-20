@@ -42,7 +42,7 @@
 			<div class="table-row-group">
 				{#each data.urls as url (url.id)}
 					<div class="table-row">
-						<div class="table-cell">{url.createdAt.toLocaleString()}</div>
+						<div class="table-cell">{url.created_at.toLocaleString()}</div>
 						<div class="table-cell">
 							<div class="flex items-center gap-3">
 								{url.code}

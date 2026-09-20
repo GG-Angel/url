@@ -2,78 +2,89 @@ package url
 
 import (
 	"context"
-	"crypto/rand"
 	"errors"
-	"fmt"
-	"log/slog"
-	"math/big"
 
 	repo "github.com/GG-Angel/url/internal/adapters/postgresql/sqlc"
-	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type service interface {
 	GetUrlByCode(ctx context.Context, code string) (repo.Url, error)
+	GetUrlByID(ctx context.Context, id int) (repo.Url, error)
 	ListUrls(ctx context.Context, limit, offset int) ([]repo.Url, error)
-	ShortenUrl(ctx context.Context, url string) (repo.Url, error)
+	ShortenUrl(ctx context.Context, url string, tags []string) (repo.Url, error)
+	DeleteUrl(ctx context.Context, id int) error
+	DeleteTag(ctx context.Context, id int) error
 }
 
+var errInvalidLimitOrOffset = errors.New("invalid limit or offset")
+
 type svc struct {
-	repo repo.Querier
+	repo *repo.Queries
+	db   *pgxpool.Pool
+}
+
+// GetUrlByID implements [service].
+func (s *svc) GetUrlByID(ctx context.Context, id int) (repo.Url, error) {
+	return s.repo.GetUrlByID(ctx, int32(id))
+}
+
+// GetUrlByCode implements [service].
+func (s *svc) GetUrlByCode(ctx context.Context, code string) (repo.Url, error) {
+	return s.repo.GetUrlByCode(ctx, code)
 }
 
 // ListUrls implements [service].
 func (s *svc) ListUrls(ctx context.Context, limit int, offset int) ([]repo.Url, error) {
 	if offset < 0 || limit <= 0 || limit > 100 {
-		return nil, fmt.Errorf("invalid limit or offset")
+		return nil, errInvalidLimitOrOffset
 	}
 
 	return s.repo.ListUrls(ctx, repo.ListUrlsParams{Limit: int32(limit), Offset: int32(offset)})
 }
 
-// GetUrlByCode implements [service].
-func (s *svc) GetUrlByCode(ctx context.Context, code string) (repo.Url, error) {
-	return s.repo.FindUrlByCode(ctx, code)
-}
-
 // ShortenUrl implements [service].
-func (s *svc) ShortenUrl(ctx context.Context, url string) (repo.Url, error) {
-	const maxRetries = 5
+func (s *svc) ShortenUrl(ctx context.Context, url string, tags []string) (repo.Url, error) {
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return repo.Url{}, err
+	}
+	defer tx.Rollback(ctx)
+	qtx := s.repo.WithTx(tx)
 
-	for attempt := range maxRetries {
-		code := generateCode()
-
-		url, err := s.repo.CreateUrl(ctx, repo.CreateUrlParams{Url: url, Code: code})
-		if err == nil {
-			slog.Info("created short url", "code", code)
-			return url, nil
-		}
-
-		var pgErr *pgconn.PgError
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			slog.Debug("code collision", "code", code, "attempt", attempt+1)
-			continue // collision
-		}
-
-		slog.Error("failed to create short url", "error", err)
+	// create url with generated code
+	urlRow, err := qtx.CreateUrl(ctx, repo.CreateUrlParams{Url: url, Code: generateCode()})
+	if err != nil {
 		return repo.Url{}, err
 	}
 
-	return repo.Url{}, fmt.Errorf("failed to generate code after %d attempts", maxRetries)
-}
-
-func generateCode() string {
-	const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	const codeLength = 6
-
-	buffer := make([]byte, codeLength)
-	for i := range buffer {
-		index, _ := rand.Int(rand.Reader, big.NewInt(int64(len(alphabet))))
-		buffer[i] = alphabet[index.Int64()]
+	// create and attach tags to url
+	for _, tag := range tags {
+		tagRow, err := qtx.CreateTag(ctx, tag)
+		if err != nil {
+			return repo.Url{}, err
+		}
+		if err := qtx.AddTagToUrl(ctx, repo.AddTagToUrlParams{UrlID: urlRow.ID, TagID: tagRow.ID}); err != nil {
+			return repo.Url{}, err
+		}
 	}
-	return string(buffer)
+
+	if err := tx.Commit(ctx); err != nil {
+		return repo.Url{}, err
+	}
+	return urlRow, nil
 }
 
-func NewService(repo repo.Querier) service {
-	return &svc{repo}
+// DeleteUrl implements [service].
+func (s *svc) DeleteUrl(ctx context.Context, id int) error {
+	return s.repo.DeleteUrl(ctx, int32(id))
+}
+
+// DeleteTag implements [service].
+func (s *svc) DeleteTag(ctx context.Context, id int) error {
+	return s.repo.DeleteTag(ctx, int32(id))
+}
+
+func NewService(repo *repo.Queries, db *pgxpool.Pool) service {
+	return &svc{repo: repo, db: db}
 }
