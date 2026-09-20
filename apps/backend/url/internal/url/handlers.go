@@ -41,7 +41,15 @@ func (h *handler) GetUrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	io.Write(w, http.StatusOK, UrlFromRepo(url))
+	tags, err := h.service.GetTagsForUrl(r.Context(), id)
+	if err != nil {
+		message := "Failed to get tags for URL"
+		slog.Error(message, "error", err)
+		http.Error(w, message, http.StatusInternalServerError)
+		return
+	}
+
+	io.Write(w, http.StatusOK, UrlWithTagsFromRepo(url, tags))
 }
 
 func (h *handler) CreateUrl(w http.ResponseWriter, r *http.Request) {
@@ -78,9 +86,9 @@ func (h *handler) ListUrls(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := make([]UrlResponse, len(urls))
-	for i, u := range urls {
-		response[i] = UrlFromRepo(u)
+	response := make([]UrlWithTagsResponse, len(urls))
+	for i, url := range urls {
+		response[i] = UrlWithTagsFromRepo(url.Url, url.Tags)
 	}
 	io.Write(w, http.StatusOK, response)
 }

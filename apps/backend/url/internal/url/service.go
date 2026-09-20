@@ -8,10 +8,16 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type UrlWithTags struct {
+	Url  repo.Url
+	Tags []repo.Tag
+}
+
 type service interface {
 	GetUrlByCode(ctx context.Context, code string) (repo.Url, error)
 	GetUrlByID(ctx context.Context, id int) (repo.Url, error)
-	ListUrls(ctx context.Context, limit, offset int) ([]repo.Url, error)
+	GetTagsForUrl(ctx context.Context, urlID int) ([]repo.Tag, error)
+	ListUrls(ctx context.Context, limit, offset int) ([]UrlWithTags, error)
 	ShortenUrl(ctx context.Context, url string, tags []string) (repo.Url, error)
 	DeleteUrl(ctx context.Context, id int) error
 	DeleteTag(ctx context.Context, id int) error
@@ -34,13 +40,35 @@ func (s *svc) GetUrlByCode(ctx context.Context, code string) (repo.Url, error) {
 	return s.repo.GetUrlByCode(ctx, code)
 }
 
+// GetTagsForUrl implements [service].
+func (s *svc) GetTagsForUrl(ctx context.Context, urlID int) ([]repo.Tag, error) {
+	return s.repo.ListTagsForUrl(ctx, int32(urlID))
+}
+
 // ListUrls implements [service].
-func (s *svc) ListUrls(ctx context.Context, limit int, offset int) ([]repo.Url, error) {
+func (s *svc) ListUrls(ctx context.Context, limit int, offset int) ([]UrlWithTags, error) {
 	if offset < 0 || limit <= 0 || limit > 100 {
 		return nil, errInvalidLimitOrOffset
 	}
 
-	return s.repo.ListUrls(ctx, repo.ListUrlsParams{Limit: int32(limit), Offset: int32(offset)})
+	urls, err := s.repo.ListUrls(ctx, repo.ListUrlsParams{Limit: int32(limit), Offset: int32(offset)})
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]UrlWithTags, len(urls))
+	for i, url := range urls {
+		tags, err := s.repo.ListTagsForUrl(ctx, url.ID)
+		if err != nil {
+			return nil, err
+		}
+		result[i] = UrlWithTags{
+			Url:  url,
+			Tags: tags,
+		}
+	}
+
+	return result, nil
 }
 
 // ShortenUrl implements [service].

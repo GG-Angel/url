@@ -13,6 +13,13 @@ type TagResponse struct {
 }
 
 type UrlResponse struct {
+	ID        int       `json:"id"`
+	Url       string    `json:"url"`
+	Code      string    `json:"code"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type UrlWithTagsResponse struct {
 	ID        int           `json:"id"`
 	Url       string        `json:"url"`
 	Code      string        `json:"code"`
@@ -25,11 +32,34 @@ type CreateUrlRequest struct {
 	Tags []string `json:"tags"`
 }
 
-func UrlFromRepo(u repo.Url) UrlResponse {
+func TagFromRepo(tag repo.Tag) TagResponse {
+	return TagResponse{
+		ID:        int(tag.ID),
+		Name:      tag.Name,
+		CreatedAt: tag.CreatedAt,
+	}
+}
+
+func UrlFromRepo(url repo.Url) UrlResponse {
 	return UrlResponse{
-		ID:        int(u.ID),
-		Url:       u.Url,
-		Code:      u.Code,
-		CreatedAt: u.CreatedAt,
+		ID:        int(url.ID),
+		Url:       url.Url,
+		Code:      url.Code,
+		CreatedAt: url.CreatedAt,
+	}
+}
+
+func UrlWithTagsFromRepo(url repo.Url, tags []repo.Tag) UrlWithTagsResponse {
+	tagResponses := make([]TagResponse, len(tags))
+	for i, tag := range tags {
+		tagResponses[i] = TagFromRepo(tag)
+	}
+
+	return UrlWithTagsResponse{
+		ID:        int(url.ID),
+		Url:       url.Url,
+		Code:      url.Code,
+		CreatedAt: url.CreatedAt,
+		Tags:      tagResponses,
 	}
 }
