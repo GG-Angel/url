@@ -6,16 +6,30 @@
 		path: ResolvedPathname;
 		label: string;
 		icon: Component;
-		active?: boolean;
-		iconOnly?: boolean;
+		isActive?: boolean;
+		isIconOnly?: boolean;
 	};
 
-	let { path, label, icon: Icon, active = false, iconOnly = false }: Props = $props();
+	let {
+		path,
+		label,
+		icon: Icon,
+		isActive = false,
+		isIconOnly = false
+	}: Props = $props();
 </script>
 
-<a href={path} class:active>
-	<Icon />
-	{#if !iconOnly}
+<a
+	href={path}
+	class={[
+		'flex items-center gap-2.5 bg-background px-4 py-2',
+		isActive
+			? 'bg-primary text-primary-foreground font-medium'
+			: 'text-foreground hover:bg-secondary-hover hover:text-foreground'
+	]}
+>
+	<Icon class="size-sm" />
+	{#if !isIconOnly}
 		{label}
 	{/if}
 </a>

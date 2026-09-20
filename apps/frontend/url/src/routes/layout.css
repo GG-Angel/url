@@ -20,6 +20,8 @@
 	--color-secondary: #18181b;
 	--color-secondary-foreground: #fafafa;
 	--color-secondary-hover: #1f1f22;
+
+	--color-success: #22c55e;
 }
 
 @layer base {
@@ -40,18 +42,6 @@
 		@apply text-sm text-muted-foreground hover:text-foreground;
 	}
 
-	.sidebar-nav a {
-		@apply flex items-center gap-2.5 bg-background px-4 py-2 text-foreground hover:bg-secondary-hover hover:text-foreground;
-	}
-
-	.sidebar-nav a.active {
-		@apply bg-primary text-primary-foreground;
-	}
-
-	.sidebar-nav svg {
-		@apply size-4 shrink-0;
-	}
-
 	section {
 		@apply overflow-hidden rounded border bg-surface;
 	}
@@ -62,27 +52,23 @@
 
 	h1,
 	h2 {
-		@apply font-mono text-sm font-semibold text-foreground;
+		@apply font-mono text-sm font-medium text-foreground;
 	}
 
 	input[type='text'],
 	input[type='url'] {
-		@apply w-full rounded border-border bg-background text-foreground placeholder:text-placeholder focus:border-ring focus:ring-ring;
-	}
-
-	button {
-		@apply flex cursor-pointer items-center gap-2 rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground transition-colors hover:bg-primary-hover;
-	}
-
-	button.secondary {
-		@apply bg-secondary text-secondary-foreground hover:bg-secondary-hover;
+		@apply h-10 w-full rounded border-border bg-background text-foreground placeholder:text-placeholder focus:border-ring focus:ring-ring;
 	}
 
 	svg {
 		@apply size-4.5 shrink-0;
 	}
 
-	svg.small {
+	svg.size-sm {
 		@apply size-4;
+	}
+
+	svg.size-xs {
+		@apply size-3.5;
 	}
 }
