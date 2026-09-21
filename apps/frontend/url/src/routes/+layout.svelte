@@ -19,8 +19,10 @@
 		</div>
 	</header>
 
-	<div class="flex flex-col-reverse min-h-0 flex-1 sm:flex-row">
-		<div class="flex flex-col justify-between w-auto border-t sm:border-t-0 sm:border-r py-4 sm:w-56">
+	<div class="flex min-h-0 flex-1 flex-col-reverse sm:flex-row">
+		<div
+			class="flex w-auto flex-col justify-between border-t py-4 sm:w-56 sm:border-t-0 sm:border-r"
+		>
 			<Nav />
 		</div>
 		<main class="flex flex-1 flex-col gap-8 overflow-y-auto p-4 sm:p-6">

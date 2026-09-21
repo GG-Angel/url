@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import Button from '$lib/components/Button.svelte';
-	import Card from '$lib/components/Card.svelte';
+	import CardWithHeader from '$lib/components/CardWithHeader.svelte';
 	import type { PageProps } from './$types';
 	import CopyButton from '$lib/components/CopyButton.svelte';
 
 	let { data }: PageProps = $props();
 </script>
 
-<Card header="Create a short URL">
+<CardWithHeader header="Create a short URL">
 	<form class="flex flex-col gap-4" method="POST" action="?/create">
 		<label class="sr-only" for="url">URL to shorten</label>
 		<input name="url" type="url" placeholder="URL to be shortened" required />
@@ -20,9 +20,9 @@
 		</div>
 		<Button class="self-start">Save</Button>
 	</form>
-</Card>
+</CardWithHeader>
 
-<Card
+<CardWithHeader
 	header="Recently created URLs"
 	link={{ href: resolve('/urls'), text: 'See all' }}
 >
@@ -73,4 +73,4 @@
 			</div>
 		</div>
 	{/if}
-</Card>
+</CardWithHeader>

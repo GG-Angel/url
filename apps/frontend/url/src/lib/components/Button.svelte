@@ -4,7 +4,7 @@
 
 	type Props = HTMLButtonAttributes & {
 		children: Snippet;
-		variant?: 'primary' | 'secondary';
+		variant?: 'primary' | 'secondary' | 'danger';
 		class?: string;
 		isIconOnly?: boolean;
 	};
@@ -25,7 +25,9 @@
 		isIconOnly ? 'p-2' : 'px-4 py-2',
 		variant === 'primary'
 			? 'bg-primary text-primary-foreground hover:bg-primary-hover'
-			: 'bg-secondary text-secondary-foreground hover:bg-secondary-hover',
+			: variant === 'secondary'
+				? 'bg-secondary text-secondary-foreground hover:bg-secondary-hover'
+				: 'text-danger-foreground hover:bg-danger-hover bg-danger',
 		className
 	]}
 >

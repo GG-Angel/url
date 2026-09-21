@@ -10,8 +10,8 @@ import (
 
 type service interface {
 	GetUrlByCode(ctx context.Context, code string) (repo.Url, error)
-	GetUrlByID(ctx context.Context, id int) (UrlWithTags, error)
-	ListUrls(ctx context.Context) ([]UrlWithTags, error)
+	GetUrlByID(ctx context.Context, id int) (UrlResponse, error)
+	ListUrls(ctx context.Context) ([]UrlResponse, error)
 	ListTags(ctx context.Context) ([]repo.ListTagsRow, error)
 	ShortenUrl(ctx context.Context, url string, tags []string, slug *string) (repo.Url, error)
 	DeleteUrl(ctx context.Context, id int) error
@@ -29,46 +29,33 @@ func (s *svc) GetUrlByCode(ctx context.Context, code string) (repo.Url, error) {
 }
 
 // GetUrlByID implements [service].
-func (s *svc) GetUrlByID(ctx context.Context, id int) (UrlWithTags, error) {
+func (s *svc) GetUrlByID(ctx context.Context, id int) (UrlResponse, error) {
 	url, err := s.repo.GetUrlByID(ctx, int32(id))
 	if err != nil {
-		return UrlWithTags{}, err
+		return UrlResponse{}, err
 	}
 	tags, err := s.repo.ListTagsForUrl(ctx, int32(id))
 	if err != nil {
-		return UrlWithTags{}, err
+		return UrlResponse{}, err
 	}
-	return UrlWithTags{
-		ID:        int(url.ID),
-		Url:       url.Url,
-		Code:      url.Code,
-		CreatedAt: url.CreatedAt,
-		Tags:      tags,
-	}, nil
+	return NewUrlResponse(url, tags), nil
 }
 
 // ListUrls implements [service].
-func (s *svc) ListUrls(ctx context.Context) ([]UrlWithTags, error) {
+func (s *svc) ListUrls(ctx context.Context) ([]UrlResponse, error) {
 	urls, err := s.repo.ListUrls(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	result := make([]UrlWithTags, len(urls))
+	result := make([]UrlResponse, len(urls))
 	for i, url := range urls {
 		tags, err := s.repo.ListTagsForUrl(ctx, url.ID)
 		if err != nil {
 			return nil, err
 		}
-		result[i] = UrlWithTags{
-			ID:        int(url.ID),
-			Url:       url.Url,
-			Code:      url.Code,
-			CreatedAt: url.CreatedAt,
-			Tags:      tags,
-		}
+		result[i] = NewUrlResponse(url, tags)
 	}
-
 	return result, nil
 }
 

@@ -22,6 +22,10 @@
 	--color-secondary-hover: #1f1f22;
 
 	--color-success: #22c55e;
+
+	--color-danger: #231919;
+	--color-danger-foreground: #e56464;
+	--color-danger-hover: #311d1d;
 }
 
 @layer base {
