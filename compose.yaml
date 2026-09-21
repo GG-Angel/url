@@ -1,18 +1,18 @@
 services:
-  url:
-    image: ghcr.io/gg-angel/url:latest
-    platform: linux/amd64
-    container_name: url-api
-    restart: unless-stopped
-    environment:
-      - GOOSE_DBSTRING
-    ports:
-      - "127.0.0.1:8080:8080"
-    networks:
-      - external
-      - internal
-    depends_on:
-      - postgres
+  # url:
+  #   image: ghcr.io/gg-angel/url:latest
+  #   platform: linux/amd64
+  #   container_name: url-api
+  #   restart: unless-stopped
+  #   environment:
+  #     - GOOSE_DBSTRING
+  #   ports:
+  #     - "127.0.0.1:8080:8080"
+  #   networks:
+  #     - external
+  #     - internal
+  #   depends_on:
+  #     - postgres
 
   postgres:
     image: postgres:16-alpine

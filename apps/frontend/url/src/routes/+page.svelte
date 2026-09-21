@@ -12,6 +12,12 @@
 	<form class="flex flex-col gap-4" method="POST" action="?/create">
 		<label class="sr-only" for="url">URL to shorten</label>
 		<input name="url" type="url" placeholder="URL to be shortened" required />
+		<div class="flex gap-4">
+			<label class="sr-only" for="slug">Custom slug</label>
+			<input name="slug" type="text" placeholder="Custom slug" />
+			<label class="sr-only" for="slug">Tags</label>
+			<input name="tags" type="text" placeholder="Add tags to the URL" />
+		</div>
 		<Button class="self-start">Save</Button>
 	</form>
 </Card>
@@ -52,7 +58,15 @@
 						<div class="table-cell">
 							{url.url}
 						</div>
-						<div class="table-cell">Tag1, Tag2</div>
+						<div class="table-cell">
+							{#if url.tags.length > 0}
+								{#each url.tags as tag (tag.id)}
+									<span>{tag.name}</span>
+								{/each}
+							{:else}
+								<span>None</span>
+							{/if}
+						</div>
 						<div class="table-cell">35</div>
 					</div>
 				{/each}

@@ -2,7 +2,6 @@ package url
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 
 	repo "github.com/GG-Angel/url/internal/adapters/postgresql/sqlc"
@@ -18,13 +17,12 @@ type service interface {
 	GetUrlByCode(ctx context.Context, code string) (repo.Url, error)
 	GetUrlByID(ctx context.Context, id int) (repo.Url, error)
 	GetTagsForUrl(ctx context.Context, urlID int) ([]repo.Tag, error)
-	ListUrls(ctx context.Context, limit, offset int) ([]UrlWithTags, error)
+	ListUrls(ctx context.Context) ([]UrlWithTags, error)
+	ListTags(ctx context.Context) ([]repo.ListTagsRow, error)
 	ShortenUrl(ctx context.Context, url string, tags []string, slug *string) (repo.Url, error)
 	DeleteUrl(ctx context.Context, id int) error
 	DeleteTag(ctx context.Context, id int) error
 }
-
-var errInvalidLimitOrOffset = errors.New("invalid limit or offset")
 
 type svc struct {
 	repo *repo.Queries
@@ -47,12 +45,8 @@ func (s *svc) GetTagsForUrl(ctx context.Context, urlID int) ([]repo.Tag, error) 
 }
 
 // ListUrls implements [service].
-func (s *svc) ListUrls(ctx context.Context, limit int, offset int) ([]UrlWithTags, error) {
-	if offset < 0 || limit <= 0 || limit > 100 {
-		return nil, errInvalidLimitOrOffset
-	}
-
-	urls, err := s.repo.ListUrls(ctx, repo.ListUrlsParams{Limit: int32(limit), Offset: int32(offset)})
+func (s *svc) ListUrls(ctx context.Context) ([]UrlWithTags, error) {
+	urls, err := s.repo.ListUrls(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -70,6 +64,11 @@ func (s *svc) ListUrls(ctx context.Context, limit int, offset int) ([]UrlWithTag
 	}
 
 	return result, nil
+}
+
+// ListTags implements [service].
+func (s *svc) ListTags(ctx context.Context) ([]repo.ListTagsRow, error) {
+	return s.repo.ListTags(ctx)
 }
 
 // ShortenUrl implements [service].

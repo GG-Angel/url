@@ -62,16 +62,9 @@ func (h *handler) CreateUrl(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) ListUrls(w http.ResponseWriter, r *http.Request) {
-	limit := io.QueryParamInt(r, "limit", 10)
-	offset := io.QueryParamInt(r, "offset", 0)
-	if offset < 0 || limit <= 0 || limit > 100 {
-		http.Error(w, "Invalid pagination parameters", http.StatusBadRequest)
-		return
-	}
-
-	urls, err := h.service.ListUrls(r.Context(), limit, offset)
+	urls, err := h.service.ListUrls(r.Context())
 	if err != nil {
-		http.Error(w, "Failed to list URLs", http.StatusInternalServerError)
+		http.Error(w, "Failed to get URLs", http.StatusInternalServerError)
 		return
 	}
 
@@ -79,7 +72,18 @@ func (h *handler) ListUrls(w http.ResponseWriter, r *http.Request) {
 	for i, url := range urls {
 		response[i] = UrlWithTagsFromRepo(url.Url, url.Tags)
 	}
+
 	io.Write(w, http.StatusOK, response)
+}
+
+func (h *handler) ListTags(w http.ResponseWriter, r *http.Request) {
+	tags, err := h.service.ListTags(r.Context())
+	if err != nil {
+		http.Error(w, "Failed to get tags", http.StatusInternalServerError)
+		return
+	}
+
+	io.Write(w, http.StatusOK, tags)
 }
 
 func (h *handler) DeleteUrl(w http.ResponseWriter, r *http.Request) {

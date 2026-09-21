@@ -38,20 +38,29 @@ func (a *application) mount() http.Handler {
 
 	r.Get("/", urlHandler.HealthCheck)
 	r.Get("/{code}", urlHandler.RedirectFromCode)
-	r.Get("/urls", urlHandler.ListUrls)
-	r.Post("/urls", urlHandler.CreateUrl)
 
-	r.Route("/urls/{id}", func(r chi.Router) {
-		r.Use(appMiddleware.ParseID)
+	// URL routes
+	r.Route("/urls", func(r chi.Router) {
+		r.Get("/", urlHandler.ListUrls)
+		r.Post("/", urlHandler.CreateUrl)
 
-		r.Get("/", urlHandler.GetUrl)
-		r.Delete("/", urlHandler.DeleteUrl)
+		r.Route("/{id}", func(r chi.Router) {
+			r.Use(appMiddleware.ParseID)
+
+			r.Get("/", urlHandler.GetUrl)
+			r.Delete("/", urlHandler.DeleteUrl)
+		})
 	})
 
-	r.Route("/tags/{id}", func(r chi.Router) {
-		r.Use(appMiddleware.ParseID)
+	// Tag routes
+	r.Route("/tags", func(r chi.Router) {
+		r.Get("/", urlHandler.ListTags)
 
-		r.Delete("/", urlHandler.DeleteTag)
+		r.Route("/{id}", func(r chi.Router) {
+			r.Use(appMiddleware.ParseID)
+
+			r.Delete("/", urlHandler.DeleteTag)
+		})
 	})
 
 	return r

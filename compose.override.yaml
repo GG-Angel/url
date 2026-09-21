@@ -1,8 +1,8 @@
 services:
-  url:
-    build:
-      context: ./apps/backend/url
-      dockerfile: Dockerfile
+  # url:
+  #   build:
+  #     context: ./apps/backend/url
+  #     dockerfile: Dockerfile
 
   postgres:
     ports:

@@ -1,14 +1,21 @@
 -- name: ListUrls :many
 SELECT *
 FROM urls
-ORDER BY created_at DESC
-LIMIT $1 OFFSET $2;
+ORDER BY created_at DESC;
 
 -- name: ListTagsForUrl :many
 SELECT t.*
 FROM tags t
 JOIN url_tags ut ON ut.tag_id = t.id
 WHERE ut.url_id = $1;
+
+-- name: ListTags :many
+SELECT
+    sqlc.embed(t),
+    COUNT(ut.url_id) AS total_links
+FROM tags t
+LEFT JOIN url_tags ut ON ut.tag_id = t.id
+GROUP BY t.id;
 
 -- name: GetUrlByCode :one
 SELECT * 

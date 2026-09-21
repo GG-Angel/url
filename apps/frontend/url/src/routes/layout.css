@@ -37,22 +37,10 @@
 		@apply cursor-pointer transition-colors hover:text-muted-foreground;
 	}
 
-	nav a,
-	section header a {
-		@apply text-sm text-muted-foreground hover:text-foreground;
-	}
-
-	section {
-		@apply overflow-hidden rounded border bg-surface;
-	}
-
-	section > header {
-		@apply border-b px-4 py-3 sm:px-5;
-	}
-
 	h1,
-	h2 {
-		@apply font-mono text-sm font-medium text-foreground;
+	h2,
+	h3 {
+		@apply font-mono;
 	}
 
 	input[type='text'],

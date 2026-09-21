@@ -6,6 +6,8 @@ package repo
 
 import (
 	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Tag struct {
@@ -18,6 +20,8 @@ type Url struct {
 	ID        int32
 	Url       string
 	Code      string
+	ExpiresAt pgtype.Timestamptz
+	UpdatedAt time.Time
 	CreatedAt time.Time
 }
 

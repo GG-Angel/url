@@ -16,8 +16,9 @@ type Querier interface {
 	DeleteUrl(ctx context.Context, id int32) error
 	GetUrlByCode(ctx context.Context, code string) (Url, error)
 	GetUrlByID(ctx context.Context, id int32) (Url, error)
+	ListTags(ctx context.Context) ([]ListTagsRow, error)
 	ListTagsForUrl(ctx context.Context, urlID int32) ([]Tag, error)
-	ListUrls(ctx context.Context, arg ListUrlsParams) ([]Url, error)
+	ListUrls(ctx context.Context) ([]Url, error)
 	RemoveTagFromUrl(ctx context.Context, arg RemoveTagFromUrlParams) error
 }
 

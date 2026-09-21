@@ -42,7 +42,7 @@ func (q *Queries) CreateTag(ctx context.Context, name string) (Tag, error) {
 const createUrl = `-- name: CreateUrl :one
 INSERT INTO urls (url, code)
 VALUES ($1, $2)
-RETURNING id, url, code, created_at
+RETURNING id, url, code, expires_at, updated_at, created_at
 `
 
 type CreateUrlParams struct {
@@ -57,6 +57,8 @@ func (q *Queries) CreateUrl(ctx context.Context, arg CreateUrlParams) (Url, erro
 		&i.ID,
 		&i.Url,
 		&i.Code,
+		&i.ExpiresAt,
+		&i.UpdatedAt,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -83,7 +85,7 @@ func (q *Queries) DeleteUrl(ctx context.Context, id int32) error {
 }
 
 const getUrlByCode = `-- name: GetUrlByCode :one
-SELECT id, url, code, created_at 
+SELECT id, url, code, expires_at, updated_at, created_at 
 FROM urls 
 WHERE code = $1
 `
@@ -95,13 +97,15 @@ func (q *Queries) GetUrlByCode(ctx context.Context, code string) (Url, error) {
 		&i.ID,
 		&i.Url,
 		&i.Code,
+		&i.ExpiresAt,
+		&i.UpdatedAt,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getUrlByID = `-- name: GetUrlByID :one
-SELECT id, url, code, created_at 
+SELECT id, url, code, expires_at, updated_at, created_at 
 FROM urls 
 WHERE id = $1
 `
@@ -113,9 +117,50 @@ func (q *Queries) GetUrlByID(ctx context.Context, id int32) (Url, error) {
 		&i.ID,
 		&i.Url,
 		&i.Code,
+		&i.ExpiresAt,
+		&i.UpdatedAt,
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const listTags = `-- name: ListTags :many
+SELECT 
+    t.id, t.name, t.created_at,
+    COUNT(ut.url_id) AS total_links
+FROM tags t
+LEFT JOIN url_tags ut ON ut.tag_id = t.id
+GROUP BY t.id
+`
+
+type ListTagsRow struct {
+	Tag        Tag
+	TotalLinks int64
+}
+
+func (q *Queries) ListTags(ctx context.Context) ([]ListTagsRow, error) {
+	rows, err := q.db.Query(ctx, listTags)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListTagsRow{}
+	for rows.Next() {
+		var i ListTagsRow
+		if err := rows.Scan(
+			&i.Tag.ID,
+			&i.Tag.Name,
+			&i.Tag.CreatedAt,
+			&i.TotalLinks,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listTagsForUrl = `-- name: ListTagsForUrl :many
@@ -131,7 +176,7 @@ func (q *Queries) ListTagsForUrl(ctx context.Context, urlID int32) ([]Tag, error
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Tag
+	items := []Tag{}
 	for rows.Next() {
 		var i Tag
 		if err := rows.Scan(&i.ID, &i.Name, &i.CreatedAt); err != nil {
@@ -146,30 +191,26 @@ func (q *Queries) ListTagsForUrl(ctx context.Context, urlID int32) ([]Tag, error
 }
 
 const listUrls = `-- name: ListUrls :many
-SELECT id, url, code, created_at
+SELECT id, url, code, expires_at, updated_at, created_at
 FROM urls
 ORDER BY created_at DESC
-LIMIT $1 OFFSET $2
 `
 
-type ListUrlsParams struct {
-	Limit  int32
-	Offset int32
-}
-
-func (q *Queries) ListUrls(ctx context.Context, arg ListUrlsParams) ([]Url, error) {
-	rows, err := q.db.Query(ctx, listUrls, arg.Limit, arg.Offset)
+func (q *Queries) ListUrls(ctx context.Context) ([]Url, error) {
+	rows, err := q.db.Query(ctx, listUrls)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Url
+	items := []Url{}
 	for rows.Next() {
 		var i Url
 		if err := rows.Scan(
 			&i.ID,
 			&i.Url,
 			&i.Code,
+			&i.ExpiresAt,
+			&i.UpdatedAt,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err

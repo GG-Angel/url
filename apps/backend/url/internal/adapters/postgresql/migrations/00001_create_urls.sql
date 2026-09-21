@@ -3,6 +3,8 @@ CREATE TABLE IF NOT EXISTS urls (
     id SERIAL PRIMARY KEY,
     url TEXT NOT NULL,
     code TEXT NOT NULL,
+    expires_at TIMESTAMPTZ,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
