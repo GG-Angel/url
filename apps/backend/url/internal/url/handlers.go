@@ -2,7 +2,6 @@ package url
 
 import (
 	"encoding/json"
-	"log/slog"
 	"net/http"
 
 	"github.com/GG-Angel/url/internal/io"
@@ -21,9 +20,7 @@ func (h *handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 func (h *handler) RedirectFromCode(w http.ResponseWriter, r *http.Request) {
 	url, err := h.service.GetUrlByCode(r.Context(), chi.URLParam(r, "code"))
 	if err != nil {
-		message := "URL not found"
-		slog.Error(message, "error", err)
-		http.Error(w, message, http.StatusNotFound)
+		http.Error(w, "URL not found", http.StatusNotFound)
 		return
 	}
 
@@ -35,17 +32,13 @@ func (h *handler) GetUrl(w http.ResponseWriter, r *http.Request) {
 
 	url, err := h.service.GetUrlByID(r.Context(), id)
 	if err != nil {
-		message := "URL not found"
-		slog.Error(message, "error", err)
-		http.Error(w, message, http.StatusNotFound)
+		http.Error(w, "URL not found", http.StatusNotFound)
 		return
 	}
 
 	tags, err := h.service.GetTagsForUrl(r.Context(), id)
 	if err != nil {
-		message := "Failed to get tags for URL"
-		slog.Error(message, "error", err)
-		http.Error(w, message, http.StatusInternalServerError)
+		http.Error(w, "Failed to get tags for URL", http.StatusInternalServerError)
 		return
 	}
 
@@ -59,11 +52,9 @@ func (h *handler) CreateUrl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url, err := h.service.ShortenUrl(r.Context(), req.Url, req.Tags)
+	url, err := h.service.ShortenUrl(r.Context(), req.Url, req.Tags, req.Slug)
 	if err != nil {
-		message := "Failed to create URL"
-		slog.Error(message, "error", err)
-		http.Error(w, message, http.StatusInternalServerError)
+		http.Error(w, "Failed to create URL", http.StatusInternalServerError)
 		return
 	}
 
@@ -80,9 +71,7 @@ func (h *handler) ListUrls(w http.ResponseWriter, r *http.Request) {
 
 	urls, err := h.service.ListUrls(r.Context(), limit, offset)
 	if err != nil {
-		message := "Failed to list URLs"
-		slog.Error(message, "error", err)
-		http.Error(w, message, http.StatusInternalServerError)
+		http.Error(w, "Failed to list URLs", http.StatusInternalServerError)
 		return
 	}
 
@@ -97,9 +86,7 @@ func (h *handler) DeleteUrl(w http.ResponseWriter, r *http.Request) {
 	id := middleware.GetID(r.Context())
 
 	if err := h.service.DeleteUrl(r.Context(), id); err != nil {
-		message := "Failed to delete URL"
-		slog.Error(message, "error", err)
-		http.Error(w, message, http.StatusInternalServerError)
+		http.Error(w, "Failed to delete URL", http.StatusInternalServerError)
 		return
 	}
 
@@ -110,9 +97,7 @@ func (h *handler) DeleteTag(w http.ResponseWriter, r *http.Request) {
 	id := middleware.GetID(r.Context())
 
 	if err := h.service.DeleteTag(r.Context(), id); err != nil {
-		message := "Failed to delete Tag"
-		slog.Error(message, "error", err)
-		http.Error(w, message, http.StatusInternalServerError)
+		http.Error(w, "Failed to delete Tag", http.StatusInternalServerError)
 		return
 	}
 

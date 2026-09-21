@@ -27,7 +27,8 @@ func (q *Queries) AddTagToUrl(ctx context.Context, arg AddTagToUrlParams) error 
 const createTag = `-- name: CreateTag :one
 INSERT INTO tags (name)
 VALUES ($1)
-ON CONFLICT (name) DO NOTHING
+ON CONFLICT (name) DO UPDATE
+    SET name = EXCLUDED.name
 RETURNING id, name, created_at
 `
 

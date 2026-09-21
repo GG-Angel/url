@@ -30,6 +30,7 @@ type UrlWithTagsResponse struct {
 type CreateUrlRequest struct {
 	Url  string   `json:"url"`
 	Tags []string `json:"tags"`
+	Slug *string  `json:"slug,omitempty"`
 }
 
 func TagFromRepo(tag repo.Tag) TagResponse {

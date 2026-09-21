@@ -3,6 +3,7 @@ package url
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	repo "github.com/GG-Angel/url/internal/adapters/postgresql/sqlc"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -18,7 +19,7 @@ type service interface {
 	GetUrlByID(ctx context.Context, id int) (repo.Url, error)
 	GetTagsForUrl(ctx context.Context, urlID int) ([]repo.Tag, error)
 	ListUrls(ctx context.Context, limit, offset int) ([]UrlWithTags, error)
-	ShortenUrl(ctx context.Context, url string, tags []string) (repo.Url, error)
+	ShortenUrl(ctx context.Context, url string, tags []string, slug *string) (repo.Url, error)
 	DeleteUrl(ctx context.Context, id int) error
 	DeleteTag(ctx context.Context, id int) error
 }
@@ -72,7 +73,7 @@ func (s *svc) ListUrls(ctx context.Context, limit int, offset int) ([]UrlWithTag
 }
 
 // ShortenUrl implements [service].
-func (s *svc) ShortenUrl(ctx context.Context, url string, tags []string) (repo.Url, error) {
+func (s *svc) ShortenUrl(ctx context.Context, url string, tags []string, slug *string) (repo.Url, error) {
 	tx, err := s.db.Begin(ctx)
 	if err != nil {
 		return repo.Url{}, err
@@ -81,8 +82,16 @@ func (s *svc) ShortenUrl(ctx context.Context, url string, tags []string) (repo.U
 	qtx := s.repo.WithTx(tx)
 
 	// create url with generated code
-	urlRow, err := qtx.CreateUrl(ctx, repo.CreateUrlParams{Url: url, Code: generateCode()})
+	var code string
+	if slug != nil {
+		code = *slug
+	} else {
+		code = generateCode()
+	}
+
+	urlRow, err := qtx.CreateUrl(ctx, repo.CreateUrlParams{Url: url, Code: code})
 	if err != nil {
+		slog.Error("Failed to create URL", "error", err)
 		return repo.Url{}, err
 	}
 
@@ -90,9 +99,11 @@ func (s *svc) ShortenUrl(ctx context.Context, url string, tags []string) (repo.U
 	for _, tag := range tags {
 		tagRow, err := qtx.CreateTag(ctx, tag)
 		if err != nil {
+			slog.Error("Failed to create tag", "error", err)
 			return repo.Url{}, err
 		}
 		if err := qtx.AddTagToUrl(ctx, repo.AddTagToUrlParams{UrlID: urlRow.ID, TagID: tagRow.ID}); err != nil {
+			slog.Error("Failed to add tag to URL", "error", err)
 			return repo.Url{}, err
 		}
 	}
