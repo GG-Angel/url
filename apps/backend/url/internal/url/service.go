@@ -8,15 +8,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type UrlWithTags struct {
-	Url  repo.Url
-	Tags []repo.Tag
-}
-
 type service interface {
 	GetUrlByCode(ctx context.Context, code string) (repo.Url, error)
-	GetUrlByID(ctx context.Context, id int) (repo.Url, error)
-	GetTagsForUrl(ctx context.Context, urlID int) ([]repo.Tag, error)
+	GetUrlByID(ctx context.Context, id int) (UrlWithTags, error)
 	ListUrls(ctx context.Context) ([]UrlWithTags, error)
 	ListTags(ctx context.Context) ([]repo.ListTagsRow, error)
 	ShortenUrl(ctx context.Context, url string, tags []string, slug *string) (repo.Url, error)
@@ -29,19 +23,28 @@ type svc struct {
 	db   *pgxpool.Pool
 }
 
-// GetUrlByID implements [service].
-func (s *svc) GetUrlByID(ctx context.Context, id int) (repo.Url, error) {
-	return s.repo.GetUrlByID(ctx, int32(id))
-}
-
 // GetUrlByCode implements [service].
 func (s *svc) GetUrlByCode(ctx context.Context, code string) (repo.Url, error) {
 	return s.repo.GetUrlByCode(ctx, code)
 }
 
-// GetTagsForUrl implements [service].
-func (s *svc) GetTagsForUrl(ctx context.Context, urlID int) ([]repo.Tag, error) {
-	return s.repo.ListTagsForUrl(ctx, int32(urlID))
+// GetUrlByID implements [service].
+func (s *svc) GetUrlByID(ctx context.Context, id int) (UrlWithTags, error) {
+	url, err := s.repo.GetUrlByID(ctx, int32(id))
+	if err != nil {
+		return UrlWithTags{}, err
+	}
+	tags, err := s.repo.ListTagsForUrl(ctx, int32(id))
+	if err != nil {
+		return UrlWithTags{}, err
+	}
+	return UrlWithTags{
+		ID:        int(url.ID),
+		Url:       url.Url,
+		Code:      url.Code,
+		CreatedAt: url.CreatedAt,
+		Tags:      tags,
+	}, nil
 }
 
 // ListUrls implements [service].
@@ -58,8 +61,11 @@ func (s *svc) ListUrls(ctx context.Context) ([]UrlWithTags, error) {
 			return nil, err
 		}
 		result[i] = UrlWithTags{
-			Url:  url,
-			Tags: tags,
+			ID:        int(url.ID),
+			Url:       url.Url,
+			Code:      url.Code,
+			CreatedAt: url.CreatedAt,
+			Tags:      tags,
 		}
 	}
 

@@ -6,28 +6,26 @@ package repo
 
 import (
 	"time"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Tag struct {
-	ID        int32
-	Name      string
-	CreatedAt time.Time
+	ID        int32     `json:"id"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type Url struct {
-	ID        int32
-	Url       string
-	Code      string
-	ExpiresAt pgtype.Timestamptz
-	UpdatedAt time.Time
-	CreatedAt time.Time
+	ID        int32      `json:"id"`
+	Url       string     `json:"url"`
+	Code      string     `json:"code"`
+	ExpiresAt *time.Time `json:"expires_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	CreatedAt time.Time  `json:"created_at"`
 }
 
 type UrlTag struct {
-	ID        int32
-	UrlID     int32
-	TagID     int32
-	CreatedAt time.Time
+	ID        int32     `json:"id"`
+	UrlID     int32     `json:"url_id"`
+	TagID     int32     `json:"tag_id"`
+	CreatedAt time.Time `json:"created_at"`
 }

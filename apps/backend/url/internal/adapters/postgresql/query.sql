@@ -11,7 +11,7 @@ WHERE ut.url_id = $1;
 
 -- name: ListTags :many
 SELECT
-    sqlc.embed(t),
+    t.*,
     COUNT(ut.url_id) AS total_links
 FROM tags t
 LEFT JOIN url_tags ut ON ut.tag_id = t.id

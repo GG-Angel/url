@@ -7,6 +7,7 @@ package repo
 
 import (
 	"context"
+	"time"
 )
 
 const addTagToUrl = `-- name: AddTagToUrl :exec
@@ -15,8 +16,8 @@ VALUES ($1, $2)
 `
 
 type AddTagToUrlParams struct {
-	UrlID int32
-	TagID int32
+	UrlID int32 `json:"url_id"`
+	TagID int32 `json:"tag_id"`
 }
 
 func (q *Queries) AddTagToUrl(ctx context.Context, arg AddTagToUrlParams) error {
@@ -46,8 +47,8 @@ RETURNING id, url, code, expires_at, updated_at, created_at
 `
 
 type CreateUrlParams struct {
-	Url  string
-	Code string
+	Url  string `json:"url"`
+	Code string `json:"code"`
 }
 
 func (q *Queries) CreateUrl(ctx context.Context, arg CreateUrlParams) (Url, error) {
@@ -125,7 +126,7 @@ func (q *Queries) GetUrlByID(ctx context.Context, id int32) (Url, error) {
 }
 
 const listTags = `-- name: ListTags :many
-SELECT 
+SELECT
     t.id, t.name, t.created_at,
     COUNT(ut.url_id) AS total_links
 FROM tags t
@@ -134,8 +135,10 @@ GROUP BY t.id
 `
 
 type ListTagsRow struct {
-	Tag        Tag
-	TotalLinks int64
+	ID         int32     `json:"id"`
+	Name       string    `json:"name"`
+	CreatedAt  time.Time `json:"created_at"`
+	TotalLinks int64     `json:"total_links"`
 }
 
 func (q *Queries) ListTags(ctx context.Context) ([]ListTagsRow, error) {
@@ -148,9 +151,9 @@ func (q *Queries) ListTags(ctx context.Context) ([]ListTagsRow, error) {
 	for rows.Next() {
 		var i ListTagsRow
 		if err := rows.Scan(
-			&i.Tag.ID,
-			&i.Tag.Name,
-			&i.Tag.CreatedAt,
+			&i.ID,
+			&i.Name,
+			&i.CreatedAt,
 			&i.TotalLinks,
 		); err != nil {
 			return nil, err
@@ -229,8 +232,8 @@ WHERE url_id = $1 AND tag_id = $2
 `
 
 type RemoveTagFromUrlParams struct {
-	UrlID int32
-	TagID int32
+	UrlID int32 `json:"url_id"`
+	TagID int32 `json:"tag_id"`
 }
 
 func (q *Queries) RemoveTagFromUrl(ctx context.Context, arg RemoveTagFromUrlParams) error {
