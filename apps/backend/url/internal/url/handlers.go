@@ -18,17 +18,17 @@ func (h *handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) RedirectFromCode(w http.ResponseWriter, r *http.Request) {
-	url, err := h.service.GetUrlByCode(r.Context(), chi.URLParam(r, "code"))
+	data, err := h.service.GetURLByCode(r.Context(), chi.URLParam(r, "code"))
 	if err != nil {
 		http.Error(w, "URL not found", http.StatusNotFound)
 		return
 	}
-	http.Redirect(w, r, url.Url, http.StatusPermanentRedirect)
+	http.Redirect(w, r, data.Url.Url, http.StatusPermanentRedirect)
 }
 
-func (h *handler) GetUrl(w http.ResponseWriter, r *http.Request) {
+func (h *handler) GetURL(w http.ResponseWriter, r *http.Request) {
 	id := middleware.GetID(r.Context())
-	url, err := h.service.GetUrlByID(r.Context(), id)
+	url, err := h.service.GetURLByID(r.Context(), id)
 	if err != nil {
 		http.Error(w, "URL not found", http.StatusNotFound)
 		return
@@ -36,13 +36,13 @@ func (h *handler) GetUrl(w http.ResponseWriter, r *http.Request) {
 	io.Write(w, http.StatusOK, url)
 }
 
-func (h *handler) CreateUrl(w http.ResponseWriter, r *http.Request) {
+func (h *handler) CreateURL(w http.ResponseWriter, r *http.Request) {
 	var req CreateUrlRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid payload", http.StatusBadRequest)
 		return
 	}
-	url, err := h.service.ShortenUrl(r.Context(), req.Url, req.Tags, req.Slug)
+	url, err := h.service.ShortenURL(r.Context(), req.URL, req.Tags, req.Slug)
 	if err != nil {
 		http.Error(w, "Failed to create URL", http.StatusInternalServerError)
 		return
@@ -50,8 +50,8 @@ func (h *handler) CreateUrl(w http.ResponseWriter, r *http.Request) {
 	io.Write(w, http.StatusCreated, url)
 }
 
-func (h *handler) ListUrls(w http.ResponseWriter, r *http.Request) {
-	urls, err := h.service.ListUrls(r.Context())
+func (h *handler) GetURLs(w http.ResponseWriter, r *http.Request) {
+	urls, err := h.service.GetURLs(r.Context())
 	if err != nil {
 		http.Error(w, "Failed to get URLs", http.StatusInternalServerError)
 		return
@@ -59,8 +59,8 @@ func (h *handler) ListUrls(w http.ResponseWriter, r *http.Request) {
 	io.Write(w, http.StatusOK, urls)
 }
 
-func (h *handler) ListTags(w http.ResponseWriter, r *http.Request) {
-	tags, err := h.service.ListTags(r.Context())
+func (h *handler) GetTags(w http.ResponseWriter, r *http.Request) {
+	tags, err := h.service.GetTags(r.Context())
 	if err != nil {
 		http.Error(w, "Failed to get tags", http.StatusInternalServerError)
 		return
@@ -68,9 +68,9 @@ func (h *handler) ListTags(w http.ResponseWriter, r *http.Request) {
 	io.Write(w, http.StatusOK, tags)
 }
 
-func (h *handler) DeleteUrl(w http.ResponseWriter, r *http.Request) {
+func (h *handler) DeleteURL(w http.ResponseWriter, r *http.Request) {
 	id := middleware.GetID(r.Context())
-	if err := h.service.DeleteUrl(r.Context(), id); err != nil {
+	if err := h.service.DeleteURL(r.Context(), id); err != nil {
 		http.Error(w, "Failed to delete URL", http.StatusInternalServerError)
 		return
 	}

@@ -41,20 +41,20 @@ func (a *application) mount() http.Handler {
 
 	// URL routes
 	r.Route("/urls", func(r chi.Router) {
-		r.Get("/", urlHandler.ListUrls)
-		r.Post("/", urlHandler.CreateUrl)
+		r.Get("/", urlHandler.GetURLs)
+		r.Post("/", urlHandler.CreateURL)
 
 		r.Route("/{id}", func(r chi.Router) {
 			r.Use(appMiddleware.ParseID)
 
-			r.Get("/", urlHandler.GetUrl)
-			r.Delete("/", urlHandler.DeleteUrl)
+			r.Get("/", urlHandler.GetURL)
+			r.Delete("/", urlHandler.DeleteURL)
 		})
 	})
 
 	// Tag routes
 	r.Route("/tags", func(r chi.Router) {
-		r.Get("/", urlHandler.ListTags)
+		r.Get("/", urlHandler.GetTags)
 
 		r.Route("/{id}", func(r chi.Router) {
 			r.Use(appMiddleware.ParseID)

@@ -9,17 +9,19 @@ import (
 )
 
 type Querier interface {
-	AddTagToUrl(ctx context.Context, arg AddTagToUrlParams) error
+	AddTagToURL(ctx context.Context, arg AddTagToURLParams) error
 	CreateTag(ctx context.Context, name string) (Tag, error)
-	CreateUrl(ctx context.Context, arg CreateUrlParams) (Url, error)
+	CreateURL(ctx context.Context, arg CreateURLParams) (Url, error)
 	DeleteTag(ctx context.Context, id int32) error
-	DeleteUrl(ctx context.Context, id int32) error
-	GetUrlByCode(ctx context.Context, code string) (Url, error)
-	GetUrlByID(ctx context.Context, id int32) (Url, error)
-	ListTags(ctx context.Context) ([]ListTagsRow, error)
-	ListTagsForUrl(ctx context.Context, urlID int32) ([]Tag, error)
-	ListUrls(ctx context.Context) ([]Url, error)
-	RemoveTagFromUrl(ctx context.Context, arg RemoveTagFromUrlParams) error
+	DeleteURL(ctx context.Context, id int32) error
+	GetTags(ctx context.Context) ([]Tag, error)
+	GetTagsForURL(ctx context.Context, urlID int32) ([]Tag, error)
+	GetURLByCode(ctx context.Context, code string) (Url, error)
+	GetURLByID(ctx context.Context, id int32) (Url, error)
+	GetURLsWithTags(ctx context.Context) ([]GetURLsWithTagsRow, error)
+	GetVisits(ctx context.Context) ([]Visit, error)
+	GetVisitsForURL(ctx context.Context, urlID int32) ([]Visit, error)
+	RemoveTagFromURL(ctx context.Context, arg RemoveTagFromURLParams) error
 }
 
 var _ Querier = (*Queries)(nil)

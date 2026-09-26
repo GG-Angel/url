@@ -5,6 +5,7 @@
 package repo
 
 import (
+	"net/netip"
 	"time"
 )
 
@@ -15,12 +16,16 @@ type Tag struct {
 }
 
 type Url struct {
-	ID        int32      `json:"id"`
-	Url       string     `json:"url"`
-	Code      string     `json:"code"`
-	ExpiresAt *time.Time `json:"expires_at"`
-	UpdatedAt time.Time  `json:"updated_at"`
-	CreatedAt time.Time  `json:"created_at"`
+	ID           int32      `json:"id"`
+	Code         string     `json:"code"`
+	Url          string     `json:"url"`
+	AndroidUrl   *string    `json:"android_url"`
+	IosUrl       *string    `json:"ios_url"`
+	DesktopUrl   *string    `json:"desktop_url"`
+	EnabledSince *time.Time `json:"enabled_since"`
+	EnabledUntil *time.Time `json:"enabled_until"`
+	UpdatedAt    time.Time  `json:"updated_at"`
+	CreatedAt    time.Time  `json:"created_at"`
 }
 
 type UrlTag struct {
@@ -28,4 +33,13 @@ type UrlTag struct {
 	UrlID     int32     `json:"url_id"`
 	TagID     int32     `json:"tag_id"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+type Visit struct {
+	ID        int32      `json:"id"`
+	UrlID     int32      `json:"url_id"`
+	IpAddress netip.Addr `json:"ip_address"`
+	Country   string     `json:"country"`
+	City      string     `json:"city"`
+	VisitedAt time.Time  `json:"visited_at"`
 }

@@ -7,21 +7,20 @@ package repo
 
 import (
 	"context"
-	"time"
 )
 
-const addTagToUrl = `-- name: AddTagToUrl :exec
+const addTagToURL = `-- name: AddTagToURL :exec
 INSERT INTO url_tags (url_id, tag_id)
 VALUES ($1, $2)
 `
 
-type AddTagToUrlParams struct {
+type AddTagToURLParams struct {
 	UrlID int32 `json:"url_id"`
 	TagID int32 `json:"tag_id"`
 }
 
-func (q *Queries) AddTagToUrl(ctx context.Context, arg AddTagToUrlParams) error {
-	_, err := q.db.Exec(ctx, addTagToUrl, arg.UrlID, arg.TagID)
+func (q *Queries) AddTagToURL(ctx context.Context, arg AddTagToURLParams) error {
+	_, err := q.db.Exec(ctx, addTagToURL, arg.UrlID, arg.TagID)
 	return err
 }
 
@@ -40,25 +39,29 @@ func (q *Queries) CreateTag(ctx context.Context, name string) (Tag, error) {
 	return i, err
 }
 
-const createUrl = `-- name: CreateUrl :one
+const createURL = `-- name: CreateURL :one
 INSERT INTO urls (url, code)
 VALUES ($1, $2)
-RETURNING id, url, code, expires_at, updated_at, created_at
+RETURNING id, code, url, android_url, ios_url, desktop_url, enabled_since, enabled_until, updated_at, created_at
 `
 
-type CreateUrlParams struct {
+type CreateURLParams struct {
 	Url  string `json:"url"`
 	Code string `json:"code"`
 }
 
-func (q *Queries) CreateUrl(ctx context.Context, arg CreateUrlParams) (Url, error) {
-	row := q.db.QueryRow(ctx, createUrl, arg.Url, arg.Code)
+func (q *Queries) CreateURL(ctx context.Context, arg CreateURLParams) (Url, error) {
+	row := q.db.QueryRow(ctx, createURL, arg.Url, arg.Code)
 	var i Url
 	err := row.Scan(
 		&i.ID,
-		&i.Url,
 		&i.Code,
-		&i.ExpiresAt,
+		&i.Url,
+		&i.AndroidUrl,
+		&i.IosUrl,
+		&i.DesktopUrl,
+		&i.EnabledSince,
+		&i.EnabledUntil,
 		&i.UpdatedAt,
 		&i.CreatedAt,
 	)
@@ -75,106 +78,24 @@ func (q *Queries) DeleteTag(ctx context.Context, id int32) error {
 	return err
 }
 
-const deleteUrl = `-- name: DeleteUrl :exec
+const deleteURL = `-- name: DeleteURL :exec
 DELETE FROM urls
 WHERE id = $1
 `
 
-func (q *Queries) DeleteUrl(ctx context.Context, id int32) error {
-	_, err := q.db.Exec(ctx, deleteUrl, id)
+func (q *Queries) DeleteURL(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteURL, id)
 	return err
 }
 
-const getUrlByCode = `-- name: GetUrlByCode :one
-SELECT id, url, code, expires_at, updated_at, created_at 
-FROM urls 
-WHERE code = $1
+const getTags = `-- name: GetTags :many
+SELECT id, name, created_at
+FROM tags
+ORDER BY name
 `
 
-func (q *Queries) GetUrlByCode(ctx context.Context, code string) (Url, error) {
-	row := q.db.QueryRow(ctx, getUrlByCode, code)
-	var i Url
-	err := row.Scan(
-		&i.ID,
-		&i.Url,
-		&i.Code,
-		&i.ExpiresAt,
-		&i.UpdatedAt,
-		&i.CreatedAt,
-	)
-	return i, err
-}
-
-const getUrlByID = `-- name: GetUrlByID :one
-SELECT id, url, code, expires_at, updated_at, created_at 
-FROM urls 
-WHERE id = $1
-`
-
-func (q *Queries) GetUrlByID(ctx context.Context, id int32) (Url, error) {
-	row := q.db.QueryRow(ctx, getUrlByID, id)
-	var i Url
-	err := row.Scan(
-		&i.ID,
-		&i.Url,
-		&i.Code,
-		&i.ExpiresAt,
-		&i.UpdatedAt,
-		&i.CreatedAt,
-	)
-	return i, err
-}
-
-const listTags = `-- name: ListTags :many
-SELECT
-    t.id, t.name, t.created_at,
-    COUNT(ut.url_id) AS total_links
-FROM tags t
-LEFT JOIN url_tags ut ON ut.tag_id = t.id
-GROUP BY t.id
-`
-
-type ListTagsRow struct {
-	ID         int32     `json:"id"`
-	Name       string    `json:"name"`
-	CreatedAt  time.Time `json:"created_at"`
-	TotalLinks int64     `json:"total_links"`
-}
-
-func (q *Queries) ListTags(ctx context.Context) ([]ListTagsRow, error) {
-	rows, err := q.db.Query(ctx, listTags)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListTagsRow{}
-	for rows.Next() {
-		var i ListTagsRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.CreatedAt,
-			&i.TotalLinks,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listTagsForUrl = `-- name: ListTagsForUrl :many
-SELECT t.id, t.name, t.created_at
-FROM tags t
-JOIN url_tags ut ON ut.tag_id = t.id
-WHERE ut.url_id = $1
-`
-
-func (q *Queries) ListTagsForUrl(ctx context.Context, urlID int32) ([]Tag, error) {
-	rows, err := q.db.Query(ctx, listTagsForUrl, urlID)
+func (q *Queries) GetTags(ctx context.Context) ([]Tag, error) {
+	rows, err := q.db.Query(ctx, getTags)
 	if err != nil {
 		return nil, err
 	}
@@ -193,28 +114,118 @@ func (q *Queries) ListTagsForUrl(ctx context.Context, urlID int32) ([]Tag, error
 	return items, nil
 }
 
-const listUrls = `-- name: ListUrls :many
-SELECT id, url, code, expires_at, updated_at, created_at
-FROM urls
-ORDER BY created_at DESC
+const getTagsForURL = `-- name: GetTagsForURL :many
+SELECT t.id, t.name, t.created_at
+FROM tags t
+JOIN url_tags ut ON ut.tag_id = t.id
+WHERE ut.url_id = $1
+ORDER BY t.id
 `
 
-func (q *Queries) ListUrls(ctx context.Context) ([]Url, error) {
-	rows, err := q.db.Query(ctx, listUrls)
+func (q *Queries) GetTagsForURL(ctx context.Context, urlID int32) ([]Tag, error) {
+	rows, err := q.db.Query(ctx, getTagsForURL, urlID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Url{}
+	items := []Tag{}
 	for rows.Next() {
-		var i Url
+		var i Tag
+		if err := rows.Scan(&i.ID, &i.Name, &i.CreatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getURLByCode = `-- name: GetURLByCode :one
+SELECT id, code, url, android_url, ios_url, desktop_url, enabled_since, enabled_until, updated_at, created_at
+FROM urls
+WHERE code = $1
+`
+
+func (q *Queries) GetURLByCode(ctx context.Context, code string) (Url, error) {
+	row := q.db.QueryRow(ctx, getURLByCode, code)
+	var i Url
+	err := row.Scan(
+		&i.ID,
+		&i.Code,
+		&i.Url,
+		&i.AndroidUrl,
+		&i.IosUrl,
+		&i.DesktopUrl,
+		&i.EnabledSince,
+		&i.EnabledUntil,
+		&i.UpdatedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getURLByID = `-- name: GetURLByID :one
+SELECT id, code, url, android_url, ios_url, desktop_url, enabled_since, enabled_until, updated_at, created_at
+FROM urls
+WHERE id = $1
+`
+
+func (q *Queries) GetURLByID(ctx context.Context, id int32) (Url, error) {
+	row := q.db.QueryRow(ctx, getURLByID, id)
+	var i Url
+	err := row.Scan(
+		&i.ID,
+		&i.Code,
+		&i.Url,
+		&i.AndroidUrl,
+		&i.IosUrl,
+		&i.DesktopUrl,
+		&i.EnabledSince,
+		&i.EnabledUntil,
+		&i.UpdatedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getURLsWithTags = `-- name: GetURLsWithTags :many
+SELECT u.id, u.code, u.url, u.android_url, u.ios_url, u.desktop_url, u.enabled_since, u.enabled_until, u.updated_at, u.created_at, t.id, t.name, t.created_at
+FROM urls u
+LEFT OUTER JOIN url_tags ut ON ut.url_id = u.id
+LEFT OUTER JOIN tags t ON t.id = ut.tag_id
+ORDER BY u.created_at DESC, t.id
+`
+
+type GetURLsWithTagsRow struct {
+	Url Url `json:"url"`
+	Tag Tag `json:"tag"`
+}
+
+func (q *Queries) GetURLsWithTags(ctx context.Context) ([]GetURLsWithTagsRow, error) {
+	rows, err := q.db.Query(ctx, getURLsWithTags)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetURLsWithTagsRow{}
+	for rows.Next() {
+		var i GetURLsWithTagsRow
 		if err := rows.Scan(
-			&i.ID,
-			&i.Url,
-			&i.Code,
-			&i.ExpiresAt,
-			&i.UpdatedAt,
-			&i.CreatedAt,
+			&i.Url.ID,
+			&i.Url.Code,
+			&i.Url.Url,
+			&i.Url.AndroidUrl,
+			&i.Url.IosUrl,
+			&i.Url.DesktopUrl,
+			&i.Url.EnabledSince,
+			&i.Url.EnabledUntil,
+			&i.Url.UpdatedAt,
+			&i.Url.CreatedAt,
+			&i.Tag.ID,
+			&i.Tag.Name,
+			&i.Tag.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -226,17 +237,84 @@ func (q *Queries) ListUrls(ctx context.Context) ([]Url, error) {
 	return items, nil
 }
 
-const removeTagFromUrl = `-- name: RemoveTagFromUrl :exec
+const getVisits = `-- name: GetVisits :many
+SELECT id, url_id, ip_address, country, city, visited_at
+FROM visits
+ORDER BY visited_at DESC
+`
+
+func (q *Queries) GetVisits(ctx context.Context) ([]Visit, error) {
+	rows, err := q.db.Query(ctx, getVisits)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Visit{}
+	for rows.Next() {
+		var i Visit
+		if err := rows.Scan(
+			&i.ID,
+			&i.UrlID,
+			&i.IpAddress,
+			&i.Country,
+			&i.City,
+			&i.VisitedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getVisitsForURL = `-- name: GetVisitsForURL :many
+SELECT v.id, v.url_id, v.ip_address, v.country, v.city, v.visited_at
+FROM visits v
+WHERE v.url_id = $1
+ORDER BY v.visited_at DESC
+`
+
+func (q *Queries) GetVisitsForURL(ctx context.Context, urlID int32) ([]Visit, error) {
+	rows, err := q.db.Query(ctx, getVisitsForURL, urlID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Visit{}
+	for rows.Next() {
+		var i Visit
+		if err := rows.Scan(
+			&i.ID,
+			&i.UrlID,
+			&i.IpAddress,
+			&i.Country,
+			&i.City,
+			&i.VisitedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const removeTagFromURL = `-- name: RemoveTagFromURL :exec
 DELETE FROM url_tags
 WHERE url_id = $1 AND tag_id = $2
 `
 
-type RemoveTagFromUrlParams struct {
+type RemoveTagFromURLParams struct {
 	UrlID int32 `json:"url_id"`
 	TagID int32 `json:"tag_id"`
 }
 
-func (q *Queries) RemoveTagFromUrl(ctx context.Context, arg RemoveTagFromUrlParams) error {
-	_, err := q.db.Exec(ctx, removeTagFromUrl, arg.UrlID, arg.TagID)
+func (q *Queries) RemoveTagFromURL(ctx context.Context, arg RemoveTagFromURLParams) error {
+	_, err := q.db.Exec(ctx, removeTagFromURL, arg.UrlID, arg.TagID)
 	return err
 }
